@@ -1,4 +1,3 @@
-// app/api/math-problem/route.ts
 import { NextResponse } from 'next/server'
 import { GoogleGenAI } from '@google/genai'
 import { supabase } from '../../../lib/supabaseClient'
@@ -33,7 +32,6 @@ export async function POST() {
       contents: AI_PROMPT,
     })
     const text = result.text
-    console.log('AI response:', text)
     if (!text) {
       console.error('Empty AI response:', result)
       return NextResponse.json({ error: 'Empty response from Gemini' }, { status: 500 })

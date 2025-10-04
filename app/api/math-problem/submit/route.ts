@@ -1,22 +1,18 @@
-// app/api/math-problem/submit/route.ts
 import { NextResponse } from 'next/server';
 import { supabase } from '../../../../lib/supabaseClient';
+import { GoogleGenAI } from '@google/genai'
 
 const GEMINI_API_KEY = process.env.GOOGLE_API_KEY;
-const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-1.5-flash';
+const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
 
 if (!GEMINI_API_KEY) {
   throw new Error('Missing GOOGLE_API_KEY environment variable');
 }
 
-/**
- * POST /api/math-problem/submit
- * Expected JSON body:
- * {
- *   "session_id": "uuid",
- *   "user_answer": 42
- * }
- */
+const ai = new GoogleGenAI({
+  apiKey: GEMINI_API_KEY,
+})
+
 export async function POST(req: Request) {
   try {
     const body = await req.json();
@@ -53,10 +49,10 @@ You are an encouraging Primary 5 Math tutor.
 Given:
 - Problem: ${session.problem_text}
 - Correct answer: ${correctAnswer}
-- Student's answer: ${user_answer}
+- Answer: ${user_answer}
 - Result: ${isCorrect ? 'Correct' : 'Incorrect'}
 
-Write **a short, friendly, personalized feedback (1–3 sentences)** that:
+Write **a short, friendly, personalized feedback (1 to 3 sentences)** that:
 - Encourages the student
 - Explains (simply) if they made a mistake
 - If correct, praises their reasoning
@@ -64,28 +60,20 @@ Write **a short, friendly, personalized feedback (1–3 sentences)** that:
 Return only plain text (no JSON).
 `;
 
-    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(
-      GEMINI_MODEL
-    )}:generateContent?key=${encodeURIComponent(GEMINI_API_KEY)}`;
+    const result = await ai.models.generateContent({
+        model: GEMINI_MODEL,
+        contents: feedbackPrompt,
+    })
+    const aiFeedback = result.text
+    console.log(aiFeedback)
 
-    const aiResp = await fetch(endpoint, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [
-          {
-            role: 'user',
-            parts: [{ text: feedbackPrompt }],
-          },
-        ],
-      }),
-    });
+    const feedbackText = aiFeedback
+    ? aiFeedback
+    : isCorrect
+    ? 'Well done! You got the correct answer.'
+    : 'Wrong answer. Review your calculations and try again!';
 
-    const aiJson = await aiResp.json();
-    const feedbackText =
-      aiJson?.candidates?.[0]?.content?.parts?.[0]?.text?.trim() ||
-      'Good effort! Keep practicing to improve your math skills.';
-
+    
     // === 3. Save submission to Supabase ===
     const { data: submission, error: insertError } = await supabase
       .from('math_problem_submissions')
