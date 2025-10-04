@@ -15,6 +15,7 @@ export default function HomePage() {
     setError(null);
     setSubmission(null);
     setLoadingGen(true);
+    setSession(null);
     try {
       const res = await fetch('/api/math-problem', { method: 'POST' });
       const json = await res.json();
@@ -61,10 +62,37 @@ export default function HomePage() {
           <button
             onClick={generateProblem}
             disabled={loadingGen}
-            className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-bold py-3 px-4 rounded-lg transition duration-200 ease-in-out transform hover:scale-105"
+            className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-bold py-3 px-4 rounded-lg transition duration-200 ease-in-out transform hover:scale-105 flex items-center justify-center gap-2"
           >
-            {loadingGen ? 'Generating...' : 'Generate New Problem'}
+            {loadingGen ? (
+              <>
+                <span>Generating</span>
+                <svg
+                  className="animate-spin h-5 w-5 text-white"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  ></circle>
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+                  ></path>
+                </svg>
+              </>
+            ) : (
+              'Generate New Problem'
+            )}
           </button>
+
         </div>
 
         {/* Error box */}
@@ -96,7 +124,7 @@ export default function HomePage() {
                   value={answer}
                   onChange={(e) => setAnswer(e.target.value)}
                   disabled={submitting}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 disabled:bg-gray-100"
                   placeholder="Enter your answer"
                   required
                 />
@@ -105,9 +133,35 @@ export default function HomePage() {
               <button
                 type="submit"
                 disabled={!answer || submitting}
-                className="w-full bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white font-bold py-3 px-4 rounded-lg transition duration-200 ease-in-out transform hover:scale-105"
+                className="w-full bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white font-bold py-3 px-4 rounded-lg transition duration-200 ease-in-out transform hover:scale-105 flex items-center justify-center gap-2"
               >
-                {submitting ? 'Submitting...' : 'Submit Answer'}
+                {submitting ? (
+                  <>
+                    <span>Submitting</span>
+                    <svg
+                      className="animate-spin h-5 w-5 text-white"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      ></circle>
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+                      ></path>
+                    </svg>
+                  </>
+                ) : (
+                  'Submit Answer'
+                )}
               </button>
             </form>
           </div>
