@@ -1,17 +1,7 @@
 import { NextResponse } from 'next/server';
 import { supabase } from '../../../../lib/supabaseClient';
-import { GoogleGenAI } from '@google/genai'
+import { callGemini } from '../../../../utils/ai-helper'
 
-const GEMINI_API_KEY = process.env.GOOGLE_API_KEY;
-const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
-
-if (!GEMINI_API_KEY) {
-  throw new Error('Missing GOOGLE_API_KEY environment variable');
-}
-
-const ai = new GoogleGenAI({
-  apiKey: GEMINI_API_KEY,
-})
 
 export async function POST(req: Request) {
   try {
@@ -44,36 +34,26 @@ export async function POST(req: Request) {
     const isCorrect = Number(user_answer) === correctAnswer;
 
     // === 2. Generate personalized feedback via Gemini ===
-    const feedbackPrompt = `
-You are an encouraging Primary 5 Math tutor.
+    const AI_PROMPT = `
+You are a Primary 5 Math tutor.
 Given:
 - Problem: ${session.problem_text}
-- Correct answer: ${correctAnswer}
-- Answer: ${user_answer}
-- Result: ${isCorrect ? 'Correct' : 'Incorrect'}
+- Answer given: ${user_answer}
 
-Write **a short, friendly, personalized feedback (1 to 3 sentences)** that:
-- Encourages the student
-- Explains (simply) if they made a mistake
-- If correct, praises their reasoning
-
-Return only plain text (no JSON).
+Please evaluate the answer and write a short, informative, easy to read feedback that:
+- If they made a mistake, explain in short
+- If correct, praises their reasoning in 1 sentence
 `;
 
-    const result = await ai.models.generateContent({
-        model: GEMINI_MODEL,
-        contents: feedbackPrompt,
-    })
-    const aiFeedback = result.text
-    console.log(aiFeedback)
+    const { text } = await callGemini(AI_PROMPT)
 
-    const feedbackText = aiFeedback
-    ? aiFeedback
+    const feedbackText = text
+    ? text
     : isCorrect
     ? 'Well done! You got the correct answer.'
     : 'Wrong answer. Review your calculations and try again!';
 
-    
+
     // === 3. Save submission to Supabase ===
     const { data: submission, error: insertError } = await supabase
       .from('math_problem_submissions')
@@ -97,8 +77,6 @@ Return only plain text (no JSON).
     // === 4. Return result ===
     return NextResponse.json({
       submission,
-      feedback: feedbackText,
-      is_correct: isCorrect,
     });
   } catch (err: any) {
     console.error('Submit error:', err);

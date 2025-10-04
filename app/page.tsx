@@ -94,6 +94,7 @@ export default function HomePage() {
                 value={answer}
                 onChange={(e) => setAnswer(e.target.value)}
                 aria-label="answer"
+                disabled={submitting}
               />
               <div className="flex items-center gap-3">
                 <button
@@ -122,9 +123,9 @@ export default function HomePage() {
             {submission && (
               <div className="mt-3 bg-slate-50 p-3 rounded">
                 <h3 className="font-semibold mb-1">Feedback</h3>
-                <p className="text-slate-700">{submission.feedback}</p>
+                <p className="text-slate-700 whitespace-pre-line">{submission.feedback_text}</p>
                 <div className="mt-2 text-xs text-slate-500">
-                  Correct answer: <strong>{session.final_answer}</strong>
+                  Correct answer: <strong>{session.correct_answer}</strong>
                 </div>
               </div>
             )}
