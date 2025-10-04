@@ -1,0 +1,4 @@
+{
+  "/api/math-problem/submit/route": "app/api/math-problem/submit/route.js",
+  "/page": "app/page.js"
+}

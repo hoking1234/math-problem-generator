@@ -1,93 +1,136 @@
-'use client'
+'use client';
 
-import { useState } from 'react'
+import React, { useState } from 'react';
+import type { MathProblemSession, MathProblemSubmission } from '../types/math';
 
-interface MathProblem {
-  problem_text: string
-  final_answer: number
-}
+export default function HomePage() {
+  const [session, setSession] = useState<MathProblemSession | null>(null);
+  const [answer, setAnswer] = useState('');
+  const [loadingGen, setLoadingGen] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [submission, setSubmission] = useState<MathProblemSubmission | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
-export default function Home() {
-  const [problem, setProblem] = useState<MathProblem | null>(null)
-  const [userAnswer, setUserAnswer] = useState('')
-  const [feedback, setFeedback] = useState('')
-  const [isLoading, setIsLoading] = useState(false)
-  const [sessionId, setSessionId] = useState<string | null>(null)
-  const [isCorrect, setIsCorrect] = useState<boolean | null>(null)
-
-  const generateProblem = async () => {
-    // TODO: Implement problem generation logic
-    // This should call your API route to generate a new problem
-    // and save it to the database
+  async function generateProblem() {
+    setError(null);
+    setSubmission(null);
+    setLoadingGen(true);
+    try {
+      const res = await fetch('/api/math-problem', { method: 'POST' });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error ?? 'Failed to generate');
+      setSession(json.session);
+      setAnswer('');
+    } catch (err: any) {
+      setError(err.message ?? String(err));
+    } finally {
+      setLoadingGen(false);
+    }
   }
 
-  const submitAnswer = async (e: React.FormEvent) => {
-    e.preventDefault()
-    // TODO: Implement answer submission logic
-    // This should call your API route to check the answer,
-    // save the submission, and generate feedback
+  async function submitAnswer(e?: React.FormEvent) {
+    e?.preventDefault();
+    if (!session) return;
+    setError(null);
+    setSubmitting(true);
+    try {
+      const res = await fetch('/api/math-problem/submit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ session_id: session.id, user_answer: answer }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error ?? 'Failed to submit');
+      setSubmission(json.submission);
+    } catch (err: any) {
+      setError(err.message ?? String(err));
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
-      <main className="container mx-auto px-4 py-8 max-w-2xl">
-        <h1 className="text-4xl font-bold text-center mb-8 text-gray-800">
-          Math Problem Generator
-        </h1>
-        
-        <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
+    <div className="min-h-screen bg-slate-50 p-4 flex items-start justify-center">
+      <div className="w-full max-w-2xl">
+        <header className="mb-6">
+          <h1 className="text-2xl font-semibold">AI Primary 5 Math Practice</h1>
+          <p className="text-sm text-slate-600">Generate a Primary 5 style problem, answer, and receive feedback.</p>
+        </header>
+
+        <div className="flex gap-3 mb-4">
           <button
             onClick={generateProblem}
-            disabled={isLoading}
-            className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-bold py-3 px-4 rounded-lg transition duration-200 ease-in-out transform hover:scale-105"
+            disabled={loadingGen}
+            className="px-4 py-2 rounded bg-indigo-600 text-white hover:bg-indigo-700 disabled:opacity-50"
           >
-            {isLoading ? 'Generating...' : 'Generate New Problem'}
+            {loadingGen ? 'Generating…' : 'Generate New Problem'}
+          </button>
+
+          <button
+            onClick={() => {
+              setSession(null);
+              setSubmission(null);
+              setAnswer('');
+              setError(null);
+            }}
+            className="px-4 py-2 rounded border"
+          >
+            Reset
           </button>
         </div>
 
-        {problem && (
-          <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
-            <h2 className="text-xl font-semibold mb-4 text-gray-700">Problem:</h2>
-            <p className="text-lg text-gray-800 leading-relaxed mb-6">
-              {problem.problem_text}
-            </p>
-            
-            <form onSubmit={submitAnswer} className="space-y-4">
-              <div>
-                <label htmlFor="answer" className="block text-sm font-medium text-gray-700 mb-2">
-                  Your Answer:
-                </label>
-                <input
-                  type="number"
-                  id="answer"
-                  value={userAnswer}
-                  onChange={(e) => setUserAnswer(e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="Enter your answer"
-                  required
-                />
-              </div>
-              
-              <button
-                type="submit"
-                disabled={!userAnswer || isLoading}
-                className="w-full bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white font-bold py-3 px-4 rounded-lg transition duration-200 ease-in-out transform hover:scale-105"
-              >
-                Submit Answer
-              </button>
-            </form>
-          </div>
-        )}
+        {error && <div className="mb-4 p-3 bg-red-50 text-red-800 rounded">{error}</div>}
 
-        {feedback && (
-          <div className={`rounded-lg shadow-lg p-6 ${isCorrect ? 'bg-green-50 border-2 border-green-200' : 'bg-yellow-50 border-2 border-yellow-200'}`}>
-            <h2 className="text-xl font-semibold mb-4 text-gray-700">
-              {isCorrect ? '✅ Correct!' : '❌ Not quite right'}
-            </h2>
-            <p className="text-gray-800 leading-relaxed">{feedback}</p>
+        {!session ? (
+          <div className="p-6 bg-white rounded shadow text-slate-600">Click "Generate New Problem" to start.</div>
+        ) : (
+          <div className="bg-white rounded shadow p-4 space-y-4">
+            <div className="text-slate-800 whitespace-pre-wrap">{session.problem_text}</div>
+
+            <form onSubmit={submitAnswer} className="flex flex-col gap-3">
+              <input
+                className="border px-3 py-2 rounded"
+                placeholder="Enter numeric answer (e.g. 42 or 3.5)"
+                value={answer}
+                onChange={(e) => setAnswer(e.target.value)}
+                aria-label="answer"
+              />
+              <div className="flex items-center gap-3">
+                <button
+                  type="submit"
+                  disabled={submitting}
+                  className="px-4 py-2 rounded bg-green-600 text-white disabled:opacity-50"
+                >
+                  {submitting ? 'Submitting…' : 'Submit Answer'}
+                </button>
+
+                {submission && (
+                  <div className="text-sm">
+                    {submission.is_correct ? (
+                      <span className="text-green-700 font-medium">Correct ✓</span>
+                    ) : (
+                      <span className="text-red-700 font-medium">Incorrect ✕</span>
+                    )}
+                    <div className="text-xs text-slate-500">
+                      answered: {submission.user_answer} • {new Date(submission.created_at || '').toLocaleString()}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </form>
+
+            {submission && (
+              <div className="mt-3 bg-slate-50 p-3 rounded">
+                <h3 className="font-semibold mb-1">Feedback</h3>
+                <p className="text-slate-700">{submission.feedback}</p>
+                <div className="mt-2 text-xs text-slate-500">
+                  Correct answer: <strong>{session.final_answer}</strong>
+                </div>
+              </div>
+            )}
           </div>
         )}
-      </main>
+      </div>
     </div>
-  )
+  );
 }
