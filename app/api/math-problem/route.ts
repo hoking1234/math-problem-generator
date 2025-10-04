@@ -1,20 +1,31 @@
 import { NextResponse } from 'next/server'
 import { supabase } from '../../../lib/supabaseClient'
 import { callGemini } from '../../../utils/ai-helper'
+import { syllabus } from '../../../data/syllabus';
 
 
-const AI_PROMPT = `
-You are an AI that MUST return EXACTLY one JSON object and nothing else.
-Create ONE Primary 5 (Singapore syllabus) math word problem appropriate for a Primary 5 student.
-Return a JSON object with keys:
-- problem_text (string): the short word problem (1-2 sentences)
-- correct_answer (number): the numeric final answer (single number, no units)
-Example:
-{"problem_text":"A bakery sold 45 cupcakes...","correct_answer":15}
-`
-
-export async function POST() {
+export async function POST(req: Request) {
   try {
+    const { subStrand, difficulty } = await req.json();
+
+    const topics = syllabus.find(s => s.subStrand === subStrand)?.topics ?? [];
+    const topic =
+      topics.length > 0
+        ? topics[Math.floor(Math.random() * topics.length)]
+        : "General math question";
+
+    const AI_PROMPT = `
+      You are an AI that MUST return EXACTLY one JSON object and nothing else.
+      Create ONE Primary 5 (Singapore syllabus) math word problem appropriate for a Primary 5 student.
+      Generate a ${difficulty ?? 'medium'} question.
+      Focus on the ${subStrand ?? 'any'} sub-strand, specifically on the topic of "${topic}".
+      Make questions that are suitable to be answered in only numeric, and can be easily question in text.
+      Return a JSON object with keys:
+      - problem_text (string): the short word problem (1-2 sentences)
+      - correct_answer (number): the numeric final answer (single number, no units)
+      Example:
+      {"problem_text":"A bakery sold 45 cupcakes...","correct_answer":15}
+    `
     // === 1. Call Gemini API ===
     const { parsed } = await callGemini(AI_PROMPT, { expectJson: true })
 

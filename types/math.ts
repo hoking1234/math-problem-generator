@@ -4,6 +4,7 @@ export interface MathProblemSession {
   correct_answer: number;
   difficulty?: string | null;
   created_at?: string | null;
+  math_problem_submissions?: MathProblemSubmission[]; // add this
 }
 
 export interface MathProblemSubmission {

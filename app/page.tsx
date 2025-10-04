@@ -2,6 +2,9 @@
 
 import React, { useState } from 'react';
 import type { MathProblemSession, MathProblemSubmission } from '../types/math';
+import { syllabus } from '../data/syllabus';
+import Link from 'next/link';
+
 
 export default function HomePage() {
   const [session, setSession] = useState<MathProblemSession | null>(null);
@@ -11,13 +14,31 @@ export default function HomePage() {
   const [submission, setSubmission] = useState<MathProblemSubmission | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  const subStrandOptions = syllabus.map((s) => s.subStrand);
+  const [selectedSubStrand, setSelectedSubStrand] = useState<string | null>(() => {
+    if (subStrandOptions.length === 0) return null;
+    const randomIndex = Math.floor(Math.random() * subStrandOptions.length);
+    return subStrandOptions[randomIndex];
+  });
+
+  const difficultyOptions = ['Easy', 'Medium', 'Hard'];
+  const [selectedDifficulty, setSelectedDifficulty] = useState<string | null>('medium');
+
+
   async function generateProblem() {
     setError(null);
     setSubmission(null);
     setLoadingGen(true);
     setSession(null);
     try {
-      const res = await fetch('/api/math-problem', { method: 'POST' });
+      const res = await fetch('/api/math-problem', { 
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          subStrand: selectedSubStrand,
+          difficulty: selectedDifficulty
+        }), 
+      });
       const json = await res.json();
       if (!res.ok) throw new Error(json.error ?? 'Failed to generate');
       setSession(json.session);
@@ -56,9 +77,61 @@ export default function HomePage() {
         <h1 className="text-4xl font-bold text-center mb-8 text-gray-800">
           AI Primary 5 Math Practice
         </h1>
+        <div className="mb-6 flex justify-end">
+          <Link
+            href="/history"
+            className="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-lg transition duration-200 ease-in-out"
+          >
+            View History
+          </Link>
+        </div>
 
-        {/* Generate button */}
-        <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
+        <div className="bg-white rounded-lg shadow-lg p-6 mb-6 space-y-4">
+          {/* Sub-Strand + Difficulty */}
+          <div className="flex gap-3 mb-6 w-full">
+            <div className="relative w-1/2">
+              <select
+                value={selectedSubStrand ?? ''}
+                onChange={(e) => setSelectedSubStrand(e.target.value || null)}
+                className="appearance-none bg-blue-600 text-white font-bold py-3 px-4 rounded-lg cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500 w-full"
+              >
+                <option value="" disabled hidden>
+                  Select Sub-Strand
+                </option>
+                {subStrandOptions.map((sub) => (
+                  <option key={sub} value={sub}>
+                    {sub}
+                  </option>
+                ))}
+              </select>
+              <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-white">
+                ▼
+              </span>
+            </div>
+
+            {/* Difficulty */}
+            <div className="relative w-1/2">
+              <select
+                value={selectedDifficulty ?? ''}
+                onChange={(e) => setSelectedDifficulty(e.target.value || null)}
+                className="appearance-none bg-blue-600 text-white font-bold py-3 px-4 rounded-lg cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500 w-full"
+              >
+                <option value="" disabled hidden>
+                  Select Difficulty
+                </option>
+                {difficultyOptions.map((sub) => (
+                  <option key={sub} value={sub}>
+                    {sub}
+                  </option>
+                ))}
+              </select>
+              <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-white">
+                ▼
+              </span>
+            </div>
+          </div>
+
+          {/* Generate Button */}
           <button
             onClick={generateProblem}
             disabled={loadingGen}
@@ -89,10 +162,9 @@ export default function HomePage() {
                 </svg>
               </>
             ) : (
-              'Generate New Problem'
+              'Generate Problem'
             )}
           </button>
-
         </div>
 
         {/* Error box */}

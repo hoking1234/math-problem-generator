@@ -35,15 +35,15 @@ export async function POST(req: Request) {
 
     // === 2. Generate personalized feedback via Gemini ===
     const AI_PROMPT = `
-You are a Primary 5 Math tutor.
-Given:
-- Problem: ${session.problem_text}
-- Answer given: ${user_answer}
+      You are a Primary 5 Math tutor.
+      Given:
+      - Problem: ${session.problem_text}
+      - Answer given: ${user_answer}
 
-Please evaluate the answer and write a short, informative, easy to read feedback that:
-- If they made a mistake, explain in short
-- If correct, praises their reasoning in 1 sentence
-`;
+      Please evaluate the answer and write a short, informative, easy to read feedback that:
+      - If they made a mistake, explain in short
+      - If correct, praises their reasoning in 1 sentence
+    `
 
     const { text } = await callGemini(AI_PROMPT)
 

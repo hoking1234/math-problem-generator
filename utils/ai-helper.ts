@@ -14,9 +14,6 @@ type CallGeminiOptions = {
   retries?: number
 }
 
-/**
- * Generic helper for calling Gemini with retry + basic validation.
- */
 export async function callGemini(
   prompt: string,
   { expectJson = false, retries = 2 }: CallGeminiOptions = {}
