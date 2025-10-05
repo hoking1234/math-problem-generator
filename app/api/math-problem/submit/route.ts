@@ -33,25 +33,25 @@ export async function POST(req: Request) {
     const correctAnswer = Number(session.correct_answer);
     const isCorrect = Number(user_answer) === correctAnswer;
 
-    // === 2. Generate personalized feedback via Gemini ===
-    const AI_PROMPT = `
-      Evaluate this Primary 5 math answer.
+    // === 2. Generate personalized feedback via Gemini if incorrect ===
+    let feedbackText = ''
 
-      Problem: ${session.problem_text}
-      Answer: ${user_answer}
+    if (isCorrect) {
+      feedbackText = 'Well done! You got the correct answer.'
+    } else {
+      const AI_PROMPT = `
+        Evaluate this Primary 5 math answer.
 
-      - If correct: praise in 1 sentences.
-      - If wrong: explain why and correct reasoning in 3 sentences.
-    `;
+        Problem: ${session.problem_text}
+        Answer: ${user_answer}
 
-    const { text } = await callGemini(AI_PROMPT, { thinking: true })
+        - If correct: praise in 1 sentence.
+        - If wrong: explain why and correct reasoning in 3 sentences.
+      `
 
-    const feedbackText = text
-    ? text
-    : isCorrect
-    ? 'Well done! You got the correct answer.'
-    : 'Wrong answer. Review your calculations and try again!';
-
+      const { text } = await callGemini(AI_PROMPT, { thinking: true })
+      feedbackText = text || 'Wrong answer. Review your calculations and try again!'
+    }
 
     // === 3. Save submission to Supabase ===
     const { data: submission, error: insertError } = await supabase
