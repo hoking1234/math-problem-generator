@@ -140,20 +140,30 @@ When submitting your assessment, provide:
 
 ### My Implementation:
 
-- 
-- 
-- 
+- added retry in history
+- topic selection based on syllabus
+- added dockerfile and docker compose for development environment
 
 ## Additional Features (Optional)
 
 If you have time, consider adding:
 
-- [ ] Difficulty levels (Easy/Medium/Hard)
-- [ ] Problem history view
+- [✅] Difficulty levels (Easy/Medium/Hard)
+- [✅] Problem history view
 - [ ] Score tracking
-- [ ] Different problem types (addition, subtraction, multiplication, division)
+- [✅] Different problem types (addition, subtraction, multiplication, division)
 - [ ] Hints system
 - [ ] Step-by-step solution explanations
+
+**Added due to requirement, strongly disagree with sharing credentials on repository due to security**
+SUPABASE_URL: https://bpnfhzzeanldemeunvpz.supabase.co
+SUPABASE_ANON_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJwbmZoenplYW5sZGVtZXVudnB6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk1NTM2ODcsImV4cCI6MjA3NTEyOTY4N30.98XUkIDDKx6ntW04uZcyM6MFgWzSWRsLPxysLPODk8A
+
+### Works to improved further:
+
+- retries on supabase request upon failure
+- code refactoring
+- vector database for AI prompt improvements
 
 ---
 
