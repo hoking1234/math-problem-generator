@@ -15,16 +15,24 @@ export async function POST(req: Request) {
         : "General math question";
 
     const AI_PROMPT = `
-      You are an AI that MUST return EXACTLY one JSON object and nothing else.
-      Create ONE Primary 5 (Singapore syllabus) math word problem appropriate for a Primary 5 student.
-      Generate a ${difficulty ?? 'medium'} question.
-      Focus on the ${subStrand ?? 'any'} sub-strand, specifically on the topic of "${topic}".
-      Make questions that are suitable to be answered in only numeric, and can be easily question in text.
-      Return a JSON object with keys:
-      - problem_text (string): the short word problem (1-2 sentences)
-      - correct_answer (number): the numeric final answer (single number, no units)
+      Return ONLY a valid JSON object, no explanations, no extra text.
+      Task: Create 1 Primary 5 Singapore Math word problem.
+
+      Requirements:
+      - Difficulty: ${difficulty ?? 'medium'}
+      - Sub-strand: ${subStrand ?? 'any'}
+      - Topic: "${topic}"
+      - Question must be in 1 to 4 sentences and answerable with a single numeric value.
+
+      JSON format:
+      {
+        "problem_text": "string (the math problem)",
+        "correct_answer": number (numeric final answer only)
+      }
+
       Example:
-      {"problem_text":"A bakery sold 45 cupcakes...","correct_answer":15}
+      {"problem_text": "A bakery sold 45 cupcakes equally in 3 boxes. How many in each box?", "correct_answer": 15}
+
     `
     // === 1. Call Gemini API ===
     const { parsed } = await callGemini(AI_PROMPT, { expectJson: true })

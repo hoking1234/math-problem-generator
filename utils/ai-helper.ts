@@ -11,17 +11,29 @@ const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY })
 
 type CallGeminiOptions = {
   expectJson?: boolean
+  thinking?: boolean
   retries?: number
 }
 
 export async function callGemini(
   prompt: string,
-  { expectJson = false, retries = 2 }: CallGeminiOptions = {}
+  { expectJson = false, thinking=false, retries = 2 }: CallGeminiOptions = {}
 ) {
   for (let attempt = 1; attempt <= retries; attempt++) {
     const result = await ai.models.generateContent({
       model: GEMINI_MODEL,
       contents: prompt,
+      config: thinking
+      ? {
+          thinkingConfig: {
+            thinkingBudget: 1,
+          },
+        }
+      : {
+          thinkingConfig: {
+            thinkingBudget: 0,
+          },
+        },
     })
 
     const text = result.text?.trim()
